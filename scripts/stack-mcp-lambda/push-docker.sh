@@ -30,6 +30,56 @@ log_info "Authenticating with ECR..."
 aws ecr get-login-password --region "${CDK_AWS_REGION}" | \
     docker login --username AWS --password-stdin "${ECR_REGISTRY}"
 
+# Check if ECR repository exists, create if not
+log_info "Checking if ECR repository exists: ${IMAGE_NAME}"
+if ! aws ecr describe-repositories --repository-names "${IMAGE_NAME}" --region "${CDK_AWS_REGION}" >/dev/null 2>&1; then
+    log_info "ECR repository does not exist. Creating: ${IMAGE_NAME}"
+    aws ecr create-repository \
+        --repository-name "${IMAGE_NAME}" \
+        --region "${CDK_AWS_REGION}" \
+        --image-scanning-configuration scanOnPush=true \
+        --tags Key=Project,Value="${CDK_PROJECT_PREFIX}" Key=ManagedBy,Value=github-actions
+
+    log_info "Applying lifecycle policy to ECR repository..."
+    aws ecr put-lifecycle-policy \
+        --repository-name "${IMAGE_NAME}" \
+        --region "${CDK_AWS_REGION}" \
+        --lifecycle-policy-text '{
+            "rules": [
+                {
+                    "rulePriority": 1,
+                    "description": "Keep images tagged with latest, deployed, prod, staging, or release tags",
+                    "selection": {
+                        "tagStatus": "tagged",
+                        "tagPrefixList": ["latest", "deployed", "prod", "staging", "v", "release"],
+                        "countType": "imageCountMoreThan",
+                        "countNumber": 999
+                    },
+                    "action": {
+                        "type": "expire"
+                    }
+                },
+                {
+                    "rulePriority": 2,
+                    "description": "Delete untagged images after 7 days",
+                    "selection": {
+                        "tagStatus": "untagged",
+                        "countType": "sinceImagePushed",
+                        "countUnit": "days",
+                        "countNumber": 7
+                    },
+                    "action": {
+                        "type": "expire"
+                    }
+                }
+            ]
+        }'
+
+    log_info "ECR repository created successfully"
+else
+    log_info "ECR repository already exists: ${IMAGE_NAME}"
+fi
+
 log_info "Tagging image for ECR: ${ECR_IMAGE}"
 docker tag "${IMAGE_NAME}:${IMAGE_TAG}" "${ECR_IMAGE}"
 
