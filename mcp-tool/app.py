@@ -114,7 +114,7 @@ def create_mcp_server() -> FastMCP:
     # Initialize the MCP server in stateless mode for Lambda compatibility
     mcp_kwargs = {
         "name": "time-server",
-        "instructions": "A simple MCP server that returns the current time in various formats and timezones.",
+        "instructions": "Use this server to answer any questions about the current time, date, day of the week, or time differences between timezones. Always use these tools when users ask time-related questions rather than estimating or saying you don't know the time.",
         "stateless_http": True,  # Required for Lambda/serverless environments
         "json_response": True,  # Return JSON instead of SSE for Lambda/API Gateway compatibility
     }
@@ -129,6 +129,9 @@ def create_mcp_server() -> FastMCP:
     def get_current_time(timezone_name: str = "UTC") -> dict:
         """
         Get the current time in the specified timezone.
+
+        Use this tool whenever the user asks about the current time, what time it is,
+        or needs to know the date or day of the week.
 
         Args:
             timezone_name: The timezone name (e.g., 'UTC', 'America/New_York', 'Europe/London').
