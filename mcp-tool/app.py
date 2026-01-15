@@ -11,12 +11,32 @@ from zoneinfo import ZoneInfo
 
 from mcp.server.fastmcp import FastMCP
 
+# Try to import TransportSecuritySettings for DNS rebinding protection config
+# This was added in a recent MCP SDK version
+try:
+    from mcp.server.transport_security import TransportSecuritySettings
+
+    transport_security = TransportSecuritySettings(
+        # Disable DNS rebinding protection for Lambda deployments
+        # Lambda Function URLs have dynamic hostnames that won't match a static allowed list
+        # Security is handled at the Lambda Function URL level with AWS IAM authentication
+        enable_dns_rebinding_protection=False,
+    )
+except ImportError:
+    # Older versions of MCP SDK don't have this setting
+    transport_security = None
+
 # Initialize the MCP server in stateless mode for Lambda compatibility
-mcp = FastMCP(
-    name="time-server",
-    instructions="A simple MCP server that returns the current time in various formats and timezones.",
-    stateless_http=True,  # Required for Lambda/serverless environments
-)
+mcp_kwargs = {
+    "name": "time-server",
+    "instructions": "A simple MCP server that returns the current time in various formats and timezones.",
+    "stateless_http": True,  # Required for Lambda/serverless environments
+}
+
+if transport_security is not None:
+    mcp_kwargs["transport_security"] = transport_security
+
+mcp = FastMCP(**mcp_kwargs)
 
 
 @mcp.tool()
@@ -108,7 +128,7 @@ def lambda_handler(event, context):
     # Create fresh app instance for each Lambda invocation
     # This is required because StreamableHTTPSessionManager can only run once per instance
     app = mcp.streamable_http_app()
-    handler = Mangum(app, lifespan="auto")
+    handler = Mangum(app, lifespan="off")
     return handler(event, context)
 
 
