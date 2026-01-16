@@ -21,9 +21,21 @@ ECR_REGISTRY="${CDK_AWS_ACCOUNT_ID}.dkr.ecr.${CDK_AWS_REGION}.amazonaws.com"
 ECR_IMAGE="${ECR_REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"
 
 # Load image from tar if provided (CI/CD artifact)
-if [[ -n "${LOAD_TAR:-}" && -f "${LOAD_TAR}" ]]; then
-    log_info "Loading image from: ${LOAD_TAR}"
-    docker load -i "${LOAD_TAR}"
+log_info "LOAD_TAR env var: '${LOAD_TAR:-}'"
+log_info "Current directory: $(pwd)"
+log_info "Listing tar files in current directory:"
+ls -la *.tar 2>/dev/null || log_info "No .tar files found in current directory"
+
+if [[ -n "${LOAD_TAR:-}" ]]; then
+    if [[ -f "${LOAD_TAR}" ]]; then
+        log_info "Loading image from: ${LOAD_TAR}"
+        docker load -i "${LOAD_TAR}"
+    else
+        log_error "LOAD_TAR is set but file does not exist: ${LOAD_TAR}"
+        exit 1
+    fi
+else
+    log_info "LOAD_TAR not set, assuming image already exists locally"
 fi
 
 log_info "Authenticating with ECR..."
