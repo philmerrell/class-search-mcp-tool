@@ -60,6 +60,7 @@ export class McpLambdaStack extends cdk.Stack {
         logGroup: logGroup,
         environment: {
           LOG_LEVEL: "INFO",
+          CLASS_SEARCH_API_BASE_URL: config.classSearchApiBaseUrl,
         },
         description: "MCP Tool running in a Docker container",
       }

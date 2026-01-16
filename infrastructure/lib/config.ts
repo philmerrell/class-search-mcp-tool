@@ -8,6 +8,7 @@ export interface McpLambdaConfig {
   imageTag: string;
   lambdaMemoryMb: number;
   lambdaTimeoutSeconds: number;
+  classSearchApiBaseUrl: string;
 }
 
 export function loadConfig(scope: Construct): McpLambdaConfig {
@@ -52,6 +53,11 @@ export function loadConfig(scope: Construct): McpLambdaConfig {
     10
   );
 
+  const classSearchApiBaseUrl =
+    process.env.CDK_CLASS_SEARCH_API_BASE_URL ||
+    scope.node.tryGetContext("classSearchApiBaseUrl") ||
+    "https://classes.boisestate.edu";
+
   return {
     projectPrefix,
     awsRegion,
@@ -60,5 +66,6 @@ export function loadConfig(scope: Construct): McpLambdaConfig {
     imageTag,
     lambdaMemoryMb,
     lambdaTimeoutSeconds,
+    classSearchApiBaseUrl,
   };
 }
