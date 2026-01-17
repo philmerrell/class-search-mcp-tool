@@ -43,6 +43,12 @@ env:
   CDK_LAMBDA_MEMORY_MB: ${{ vars.CDK_LAMBDA_MEMORY_MB || '512' }}
   CDK_LAMBDA_TIMEOUT_SECONDS: ${{ vars.CDK_LAMBDA_TIMEOUT_SECONDS || '30' }}
 
+  # OpenSearch Configuration - from GitHub Variables
+  CDK_OPENSEARCH_HOST: ${{ vars.CDK_OPENSEARCH_HOST || '' }}
+  CDK_OPENSEARCH_REGION: ${{ vars.CDK_OPENSEARCH_REGION || 'us-west-2' }}
+  CDK_OPENSEARCH_ACCOUNT_ID: ${{ vars.CDK_OPENSEARCH_ACCOUNT_ID || '' }}
+  CDK_OPENSEARCH_DOMAIN_NAME: ${{ vars.CDK_OPENSEARCH_DOMAIN_NAME || '' }}
+
 concurrency:
   group: deploy-${{ github.ref }}
   cancel-in-progress: false
