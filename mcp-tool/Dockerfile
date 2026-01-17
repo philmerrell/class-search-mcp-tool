@@ -9,6 +9,7 @@ RUN pip install --no-cache-dir -r ${LAMBDA_TASK_ROOT}/requirements.txt
 
 # Copy application code
 COPY app.py ${LAMBDA_TASK_ROOT}/
+COPY opensearch_client.py ${LAMBDA_TASK_ROOT}/
 
 # Set the handler for Lambda
 CMD ["app.lambda_handler"]

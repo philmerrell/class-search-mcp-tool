@@ -4,13 +4,19 @@ services:
       context: ./mcp-tool
       dockerfile: Dockerfile.local
     ports:
-      - "8000:8000"
+      - "8002:8000"
     environment:
       - PORT=8000
-      - CLASS_SEARCH_API_BASE_URL=${CLASS_SEARCH_API_BASE_URL:-https://classes.boisestate.edu}
+      - OPENSEARCH_HOST=${OPENSEARCH_HOST:-search-opensearch-dev-01-t4a3j3mz3m5zedfbx2tnhkd2oi.us-west-2.es.amazonaws.com}
+      - OPENSEARCH_REGION=${OPENSEARCH_REGION:-us-west-2}
+      - AWS_PROFILE=${AWS_PROFILE:-dev-ai}
+      - AWS_DEFAULT_REGION=us-west-2
     volumes:
       # Mount source code for hot-reload during development
       - ./mcp-tool/app.py:/app/app.py:ro
+      - ./mcp-tool/opensearch_client.py:/app/opensearch_client.py:ro
+      # Mount AWS credentials for local development
+      - ~/.aws:/root/.aws:ro
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s

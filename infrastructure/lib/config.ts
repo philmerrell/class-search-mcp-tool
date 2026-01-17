@@ -8,7 +8,11 @@ export interface McpLambdaConfig {
   imageTag: string;
   lambdaMemoryMb: number;
   lambdaTimeoutSeconds: number;
-  classSearchApiBaseUrl: string;
+  // OpenSearch configuration for cross-account access
+  opensearchHost: string;
+  opensearchRegion: string;
+  opensearchAccountId: string;
+  opensearchDomainName: string;
 }
 
 export function loadConfig(scope: Construct): McpLambdaConfig {
@@ -53,10 +57,26 @@ export function loadConfig(scope: Construct): McpLambdaConfig {
     10
   );
 
-  const classSearchApiBaseUrl =
-    process.env.CDK_CLASS_SEARCH_API_BASE_URL ||
-    scope.node.tryGetContext("classSearchApiBaseUrl") ||
-    "https://classes.boisestate.edu";
+  // OpenSearch configuration - defaults match the dev environment
+  const opensearchHost =
+    process.env.CDK_OPENSEARCH_HOST ||
+    scope.node.tryGetContext("opensearchHost") ||
+    "search-opensearch-dev-01-t4a3j3mz3m5zedfbx2tnhkd2oi.us-west-2.es.amazonaws.com";
+
+  const opensearchRegion =
+    process.env.CDK_OPENSEARCH_REGION ||
+    scope.node.tryGetContext("opensearchRegion") ||
+    "us-west-2";
+
+  const opensearchAccountId =
+    process.env.CDK_OPENSEARCH_ACCOUNT_ID ||
+    scope.node.tryGetContext("opensearchAccountId") ||
+    ""; // Required for cross-account access
+
+  const opensearchDomainName =
+    process.env.CDK_OPENSEARCH_DOMAIN_NAME ||
+    scope.node.tryGetContext("opensearchDomainName") ||
+    "opensearch-dev-01";
 
   return {
     projectPrefix,
@@ -66,6 +86,9 @@ export function loadConfig(scope: Construct): McpLambdaConfig {
     imageTag,
     lambdaMemoryMb,
     lambdaTimeoutSeconds,
-    classSearchApiBaseUrl,
+    opensearchHost,
+    opensearchRegion,
+    opensearchAccountId,
+    opensearchDomainName,
   };
 }

@@ -38,6 +38,24 @@ export class McpLambdaStack extends cdk.Stack {
       ],
     });
 
+    // Add OpenSearch access policy for cross-account access
+    // This allows the Lambda to sign requests to OpenSearch in another account
+    if (config.opensearchAccountId && config.opensearchDomainName) {
+      lambdaRole.addToPolicy(
+        new iam.PolicyStatement({
+          effect: iam.Effect.ALLOW,
+          actions: [
+            "es:ESHttpGet",
+            "es:ESHttpPost",
+            "es:ESHttpHead",
+          ],
+          resources: [
+            `arn:aws:es:${config.opensearchRegion}:${config.opensearchAccountId}:domain/${config.opensearchDomainName}/*`,
+          ],
+        })
+      );
+    }
+
     // Create CloudWatch log group
     const logGroup = new logs.LogGroup(this, "McpLambdaLogGroup", {
       logGroupName: `/aws/lambda/${config.projectPrefix}-mcp-tool`,
@@ -60,7 +78,8 @@ export class McpLambdaStack extends cdk.Stack {
         logGroup: logGroup,
         environment: {
           LOG_LEVEL: "INFO",
-          CLASS_SEARCH_API_BASE_URL: config.classSearchApiBaseUrl,
+          OPENSEARCH_HOST: config.opensearchHost,
+          OPENSEARCH_REGION: config.opensearchRegion,
         },
         description: "MCP Tool running in a Docker container",
       }
